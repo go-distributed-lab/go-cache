@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"go-cache/internal/eviction"
 	"testing"
+	"time"
 )
 
 func BenchmarkLRU_Set(b *testing.B) {
@@ -77,6 +78,82 @@ func BenchmarkLFU_Get_Hit(b *testing.B) {
 
 func BenchmarkLFU_SetGet_Parallel(b *testing.B) {
 	c := eviction.NewLFU[int, int](512)
+	b.RunParallel(func(pb *testing.PB) {
+		i := 0
+		for pb.Next() {
+			if i%2 == 0 {
+				c.Set(i%512, i)
+			} else {
+				c.Get(i % 512)
+			}
+			i++
+		}
+	})
+}
+
+func BenchmarkFIFO_Set(b *testing.B) {
+	c := eviction.NewFIFO[string, int](1024)
+	keys := make([]string, b.N)
+	for i := range keys {
+		keys[i] = fmt.Sprintf("key-%d", i)
+	}
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		c.Set(keys[i%len(keys)], i)
+	}
+}
+
+func BenchmarkFIFO_Get_Hit(b *testing.B) {
+	c := eviction.NewFIFO[string, int](1024)
+	for i := 0; i < 1024; i++ {
+		c.Set(fmt.Sprintf("key-%d", i), i)
+	}
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		c.Get(fmt.Sprintf("key-%d", i%1024))
+	}
+}
+
+func BenchmarkFIFO_SetGet_Parallel(b *testing.B) {
+	c := eviction.NewFIFO[int, int](512)
+	b.RunParallel(func(pb *testing.PB) {
+		i := 0
+		for pb.Next() {
+			if i%2 == 0 {
+				c.Set(i%512, i)
+			} else {
+				c.Get(i % 512)
+			}
+			i++
+		}
+	})
+}
+
+func BenchmarkTTL_Set(b *testing.B) {
+	c := eviction.NewTTL[string, int](time.Minute)
+	keys := make([]string, b.N)
+	for i := range keys {
+		keys[i] = fmt.Sprintf("key-%d", i)
+	}
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		c.Set(keys[i%len(keys)], i)
+	}
+}
+
+func BenchmarkTTL_Get_Hit(b *testing.B) {
+	c := eviction.NewTTL[string, int](time.Minute)
+	for i := 0; i < 1024; i++ {
+		c.Set(fmt.Sprintf("key-%d", i), i)
+	}
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		c.Get(fmt.Sprintf("key-%d", i%1024))
+	}
+}
+
+func BenchmarkTTL_SetGet_Parallel(b *testing.B) {
+	c := eviction.NewTTL[int, int](time.Minute)
 	b.RunParallel(func(pb *testing.PB) {
 		i := 0
 		for pb.Next() {

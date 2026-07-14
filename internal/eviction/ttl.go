@@ -61,17 +61,15 @@ func (c *TTL[K, V]) Get(key K) (V, bool) {
 	return value, false
 }
 
-// Set inserts or updates key with a fresh TTL. Expired entries are purged
-// before inserting so stale memory is reclaimed on every write.
+// Set inserts or updates key with a fresh TTL. No purge is performed —
+// expired entries are reclaimed lazily by Get and Len.
 func (c *TTL[K, V]) Set(key K, value V) {
 	c.mu.Lock()
-	defer c.mu.Unlock()
-
-	c.purgeExpired()
 	c.items[key] = ttlEntry[V]{
 		value:     value,
 		expiresAt: time.Now().Add(c.ttl),
 	}
+	c.mu.Unlock()
 }
 
 // Delete removes key from the cache. No-op if absent or already expired.
