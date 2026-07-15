@@ -18,7 +18,6 @@ type Sharded[V any] struct {
 	numShards uint64
 	hits      atomic.Uint64
 	misses    atomic.Uint64
-	evictions atomic.Uint64
 }
 
 // NewSharded returns a sharded cache with the given number of shards and total
