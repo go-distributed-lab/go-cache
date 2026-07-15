@@ -166,3 +166,42 @@ func BenchmarkTTL_SetGet_Parallel(b *testing.B) {
 		}
 	})
 }
+
+func BenchmarkSharded_Set(b *testing.B) {
+	c := eviction.NewSharded[int](16, 16*64)
+	keys := make([]string, b.N)
+	for i := range keys {
+		keys[i] = fmt.Sprintf("key-%d", i)
+	}
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		c.Set(keys[i%len(keys)], i)
+	}
+}
+
+func BenchmarkSharded_Get_Hit(b *testing.B) {
+	c := eviction.NewSharded[int](16, 16*64)
+	for i := 0; i < 1024; i++ {
+		c.Set(fmt.Sprintf("key-%d", i), i)
+	}
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		c.Get(fmt.Sprintf("key-%d", i%1024))
+	}
+}
+
+func BenchmarkSharded_SetGet_Parallel(b *testing.B) {
+	c := eviction.NewSharded[int](16, 16*64)
+	b.RunParallel(func(pb *testing.PB) {
+		i := 0
+		for pb.Next() {
+			key := fmt.Sprintf("key-%d", i%512)
+			if i%2 == 0 {
+				c.Set(key, i)
+			} else {
+				c.Get(key)
+			}
+			i++
+		}
+	})
+}
