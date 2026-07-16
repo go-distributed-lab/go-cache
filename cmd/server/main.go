@@ -3,7 +3,6 @@ package main
 import (
 	"encoding/json"
 	"flag"
-	"log"
 	"net/http"
 	"strings"
 	"time"
@@ -142,8 +141,8 @@ func (s *server) handleSet(w http.ResponseWriter, r *http.Request, key string) {
 	}
 	s.cache.Set(key, body.Value)
 	s.logger.Info("set", "key", key)
+	w.Header().Set("Content-Type", "application/json") // must be before WriteHeader
 	w.WriteHeader(http.StatusCreated)
-	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]string{"key": key, "value": body.Value})
 }
 
@@ -154,4 +153,3 @@ func (s *server) handleDelete(w http.ResponseWriter, _ *http.Request, key string
 }
 
 // compile-time check: suppress unused import warning for "log"
-var _ = log.Println
