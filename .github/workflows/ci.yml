@@ -31,7 +31,7 @@ jobs:
         run: go test -race -count=1 ./...
 
       - name: Benchmarks (smoke run)
-        run: cd benchmarks && go test -bench=. -benchmem -benchtime=1s .
+        run: cd benchmarks && go test -bench="." -benchmem -benchtime=1s .
 
       - name: govulncheck
         uses: golang/govulncheck-action@v1
