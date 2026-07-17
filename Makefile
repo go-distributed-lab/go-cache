@@ -25,3 +25,24 @@ tidy:
 
 clean:
 	go clean ./...
+
+docker-build:
+	docker build -t go-cache:latest .
+
+docker-lru:
+	docker compose --profile lru up --build
+
+docker-lfu:
+	docker compose --profile lfu up --build
+
+docker-fifo:
+	docker compose --profile fifo up --build
+
+docker-ttl:
+	docker compose --profile ttl up --build
+
+docker-sharded:
+	docker compose --profile sharded up --build
+
+docker-down:
+	docker compose down
